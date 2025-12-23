@@ -50,9 +50,9 @@ The core of the simulator utilizes the **Finite-Difference Time-Domain (FDTD)** 
 
 ## Tech Stack
 
-* **Core Logic:** Vanilla JavaScript
-* **Graphics:** WebGL / GLSL
-* **Audio:** AudioWorklet API for real-time pressure-to-audio mapping
+* **Core Logic:** JavaScript
+* **Graphics:** WebGL
+* **Audio Extraction:** Python
 * **Physics:** Numerical Acoustic Modeling (FDTD)
 
 ---
@@ -69,9 +69,9 @@ To run this project locally, a web server is required to handle WebGL shaders an
 
 2. **Start a local server:**
 
-```bash
-# Using Python 3
-python3 -m http.server 8000
-```
+   ```bash
+   # Using Python 3
+   python3 -m http.server 8000
+   ```
 3. **Open in browser:**
-Navigate to http://localhost:8000.
+   Navigate to http://localhost:8000.
