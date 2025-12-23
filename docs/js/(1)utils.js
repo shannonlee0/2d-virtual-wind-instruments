@@ -82,6 +82,7 @@ function pressureToColor(pressure) {
     // given pressure, normalize st beta E [-1, 1]
     // i dont know what pmax should be
     const beta = pressure / instrument.pmax;
+    // const beta = pressure;
     if (beta <= 0) {
         return [0, 0, -beta];
     }
@@ -98,6 +99,7 @@ function pmlToColor(sigma) {
 
 function getLabel(index, thickness) {
     // created as a helper to get damping values
+
     return (-1 * Math.abs(index - thickness)) + thickness;
 }
 

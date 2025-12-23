@@ -9,12 +9,12 @@ let scene = new Grid(gridHeight, gridWidth);
 
 // re-render every n = numSteps steps
 const numSteps = 1;
-let numVals = 100000;
+let numVals = 4000;
 
 // microphone location
 let mic = {
-    i: Math.trunc(100),
-    j: Math.trunc(200),
+    i: Math.trunc(10),
+    j: Math.trunc(10),
     values: []
 }
 
@@ -39,13 +39,16 @@ function simulate() {
         // note: put source application after stepping the value to be overwritten?
         //instrument.applySource();
         scene.stepPressure();
-        scene.stepVelocity();
+        // scene.stepVelocity();
         
         // source
-        instrument.applySource();
+        //instrument.applySource();
         
         // listener
-        mic.values.push(scene.p[mic.i][mic.j]);
+        mic.values.push(scene.p1[mic.i][mic.j]);
+        // scene.p0 = scene.p1;
+        // scene.p1 = scene.p2;
+
         scene.frame++
     }
     writeMicValues(numVals);
@@ -54,6 +57,7 @@ function simulate() {
 
 function update() {
     if (scene.play) {
+        console.log(scene);
         simulate();
     }
 

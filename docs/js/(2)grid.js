@@ -1,10 +1,11 @@
 // resolution 1 is 110 x 220
-const resolution = 1.5;
-const gridHeight = 110 * resolution;
+const resolution = 1;
+const gridHeight = 100 * resolution;
 const gridWidth = 2 * gridHeight;
 
 const C = 347.23;
 const RHO = 1.176;
+// const dt = 0.00000644679;
 const dt = 0.00000644679;
 const dx = 0.00383;
 
@@ -21,72 +22,145 @@ class Grid {
         this.coordinates = initializeCoordinates(gridVertices, this);
         this.color = initializeColor(this);
 
-        // initialize grid values
+        // initialize grid values - p0 = previous, p1 = current
         let values = initializeGridValues(this);
-        this.p = values["pressure"];
-        this.vx = values["velocityX"];
-        this.vy = values["velocityY"];
+        this.p0 = values["0"];
+        this.p1 = values["1"];
 
         // initialize geometry booleans
         this.geometry = initializeGeometry(this);
 
         // set up damping coefficients
         this.damping = initializeDamping(this);
+        // just used same function
+        this.Psi = initializeDamping(this);
+        this.beta = this.geometry;
         this.dampBoundary(this);
 
         this.play = false;
         this.frame = 0;
 
+        // gaussian initial condition
         const nx = this.width;
         const ny = this.height;
-
-        const a = 0.8;              // amplitude
-        const sigma = nx / 10;      // width (adjust as needed)
+        // amplitude
+        const a = 80;
+        // width
+        const sigma = nx / 100;
         const x0 = nx / 2;
         const y0 = ny / 2;
 
-        for (let i = 0; i < ny; i++) {
-            for (let j = 0; j < nx; j++) {
+        for (let i = 10; i < ny-10; i++) {
+            for (let j = 10; j < nx-10; j++) {
                 let dx = j - x0;
                 let dy = i - y0;
-                this.p[i][j] = a * Math.exp(-(dx*dx + dy*dy) / (2 * sigma * sigma));
+                this.p1[i][j] = a * Math.exp(-(dx*dx + dy*dy) / (2 * sigma * sigma));
             }
         }
+    }
+
+    peek(i, j, dir, val) {
+        let a, b;
+        switch (dir) {
+            case "r":
+                a = i, b = j+1;
+                break;
+            case "l":
+                a = i, b = j-1;
+                break;
+            case "u":
+                a = i-1, b = j;
+                break;
+            case "d":
+                a = i+1, b = j;
+                break;
+            default:
+                console.log("erm invalid dir");
+                break;
+            }
+
+        if (this.hasOwnProperty(val)) {
+            return this[val][a][b];
+        }
+
+        return console.log("erm no val");
     }
 
     stepPressure() {
         // adjust bounds to account for ghost cells
         for (let i = 1; i < this.height - 1; i++) {
             for (let j = 1; j < this.width - 1; j++) {
-                let div_v = (this.vx[i][j] - this.vx[i][j - 1] + this.vy[i][j] - this.vy[i - 1][j]) / dx
-                if (!this.geometry[i][j]) {
-                    this.p[i][j] = ((-RHO * C * C * div_v * dt) + this.p[i][j]) / (1 + this.damping[i][j]);
+
+                const p1 = this.p1[i][j];
+                const p1l = this.peek(i, j, "l", "p1");
+                const p1r = this.peek(i, j, "r", "p1");
+                const p1u = this.peek(i, j, "u", "p1");
+                const p1d = this.peek(i, j, "d", "p1");
+
+                const beta = this.beta[i][j];
+                const betal = this.peek(i, j, "l", "beta");
+                const betar = this.peek(i, j, "r", "beta");
+                const betau = this.peek(i, j, "u", "beta");
+                const betad = this.peek(i, j, "d", "beta");
+
+                const sigma = this.damping[i][j];
+
+                let lapl = (1 - Math.max(betal, beta))*(p1l - p1) +
+                        (1 - Math.max(betar, beta))*(p1r - p1) +
+                        (1 - Math.max(betad, beta))*(p1d - p1) +
+                        (1 - Math.max(betau, beta))*(p1u - p1);
+                
+                if (beta < 1) {
+                    lapl /= (1-beta);
                 }
-            }
-        }
-    }
-    
-    stepVelocity() {
-        // adjust bounds to account for ghost cells and extra cell due to staggered grid
-        // vx
-        for (let i = 1; i < this.height - 1; i++) {
-            for (let j = 0; j < this.width - 1; j++) {
-                if (!this.geometry[i][j] && !this.geometry[i][j + 1]) {
-                    let grad_p_x = (this.p[i][j + 1] - this.p[i][j]) / dx
-                    this.vx[i][j] = (-1 / RHO * dt * grad_p_x + this.vx[i][j]) / (1 + this.damping[i][j]);
+
+                if (sigma > 0) {
+                    // left to right, up to down?
+                    const grad_px = (p1r - p1l) / 2;
+                    const grad_py = (p1u - p1d) / 2;
+
+                    let grad = 0;
+                    if (sigma > this.damping[i][j-1]) {
+                        grad = grad_px;
+                    }
+                    else if (sigma > this.damping[i][j+1]) {
+                        grad = -1 * grad_px;
+                    }
+                    else if (sigma > this.damping[i+1][j]) {
+                        grad = grad_py;
+                    }
+                    else if (sigma > this.damping[i-1][j]) {
+                        grad = -1 * grad_py;
+                    }
+
+                    //const Psi = (0.99 - sigma) * this.Psi[i][j] + (0.0625)*grad;
+                    const Psi = 0;
+                    // equation to artificially damp
+                    let p2 = (2 - sigma*sigma) * p1 - (1 - sigma) * this.p0[i][j] + (C*dt/dx)**2 * (lapl - Psi);
+                    p2 /= (1+sigma);
+
+                    this.Psi[i][j] = Psi;
+                    this.p0[i][j] = p2;
+                }
+                else {
+                    //const Psi = 0.99 * this.Psi[i][j];
+                    const Psi = 0;
+                    const s_beta = beta*beta*beta;
+                    const p2 = p1 + (1 - s_beta) * (p1 - this.p0[i][j]) + 
+                        ((1 - s_beta) * (C*dt/dx)**2 + (s_beta / 4)) * (lapl - Psi);
+                    
+                    this.Psi[i][j] = Psi;
+                    this.p0[i][j] = p2;
                 }
             }
         }
 
-        // vy
-        for (let i = 0; i < this.height - 1; i++) {
-            for (let j = 1; j < this.width - 1; j++) {
-                if (!this.geometry[i][j] && !this.geometry[i + 1][j]) {
-                    let grad_p_y = (this.p[i + 1][j] - this.p[i][j]) / dx
-                    this.vy[i][j] = (-1 / RHO * dt * grad_p_y + this.vy[i][j]) / (1 + this.damping[i][j]);
-                }
-            }    
-        }
+        // want to swap pointers, but for js i think it's easier to just create temp var for now
+        let ptemp = this.p0;
+        this.p0 = this.p1;
+        this.p1 = ptemp;
+
+        console.log("Psi: ", this.Psi);
     }
 
     colorCell(i, j, choice) {
@@ -99,7 +173,7 @@ class Grid {
         for (let i = 1; i < this.height - 1; i++) {
             for (let j = 1; j < this.width - 1; j++) {
                 if (!this.geometry[i][j]) {
-                    this.colorCell(i, j, pressureToColor(this.p[i][j]));
+                    this.colorCell(i, j, pressureToColor(this.p1[i][j]));
                 }
             }
         }
@@ -136,6 +210,7 @@ class Grid {
         // given an instrument cell ij, check every cell located in range of thickness
         // directly edit damping field
         const step = 1 / (thickness + 1);
+        const n = 1;
         for (let i = 0; i <= thickness*2 + 1; i++) {
             for (let j = 0; j <= thickness*2 + 1; j++) {
                 const trueIndexI = instrumentI - thickness + i;
@@ -143,7 +218,7 @@ class Grid {
                 // get label that indicates closeness to outer boundary [0, 1, ..., 1, 0]
                 // add one, then multiply by step
                 if ((trueIndexI > 0 && trueIndexI < this.height - 1) && (trueIndexJ > 0 && trueIndexJ < this.width - 1)) {
-                    this.damping[trueIndexI][trueIndexJ] = Math.max(0.5 * step * Math.min(getLabel(i, thickness) + 1, getLabel(j, thickness) + 1), this.damping[trueIndexI][trueIndexJ]);
+                    this.damping[trueIndexI][trueIndexJ] = Math.max(0.5 * (step * Math.min(getLabel(i, thickness) + 1, getLabel(j, thickness) + 1)) ** n, this.damping[trueIndexI][trueIndexJ]);
                 }
             }
         }
@@ -178,8 +253,8 @@ class Grid {
     }
 
     applyDipole(i1, j1, i2, j2) {
-        this.p[i1][j1] = -amp * Math.sin(scene.frame * dt * (2*Math.PI) * freq);
-        this.p[i2][j2] = amp * Math.sin(scene.frame * dt * (2*Math.PI) * freq);
+        this.p1[i1][j1] = -amp * Math.sin(scene.frame * dt * (2*Math.PI) * freq);
+        this.p1[i2][j2] = amp * Math.sin(scene.frame * dt * (2*Math.PI) * freq);
     }
 
     reset() {
@@ -268,40 +343,32 @@ function getVertices(coordinates, color, grid) {
     return vertices;
 }
 
+// returns object with zeroed grids p0, p1
 function initializeGridValues(grid) {
     const height = grid.height;
     const width = grid.width;
 
     // n x m pressure grid
-    let p = [];
+    let p0 = [];
     for (let i = 0; i < height; i++) {
-        p[i] = [];
+        p0[i] = [];
         for (let j = 0; j < width; j++) {
-            p[i][j] = 0;
+            p0[i][j] = 0;
         }
     }
 
-    // staggered grid: n x (m + 1) vx grid, and an
-    let vx = [];
+    // n x m pressure grid
+    let p1 = [];
     for (let i = 0; i < height; i++) {
-        vx[i] = [];
-        for (let j = 0; j < width + 1; j++) {
-            vx[i][j] = 0;
-        }
-    }
-    // (n + 1) x m vy grid
-    let vy = [];
-    for (let i = 0; i < height + 1; i++) {
-        vy[i] = [];
+        p1[i] = [];
         for (let j = 0; j < width; j++) {
-            vy[i][j] = 0;
+            p1[i][j] = 0;
         }
     }
 
     const values = {
-        pressure: p,
-        velocityX: vx,
-        velocityY: vy
+        0: p0,
+        1: p1
     };
 
     return values;
@@ -312,11 +379,12 @@ function initializeGeometry(grid) {
     const width = grid.width;
 
     // 2d array of booleans: true indicates solid cell, false indicates air cell
+    // edit: making to floats
     let geometry = [];
     for (let i = 0; i < height; i++) {
         geometry[i] = [];
         for (let j = 0; j < width; j++) {
-            geometry[i][j] = false;
+            geometry[i][j] = 0.0;
         }
     }
     return geometry;

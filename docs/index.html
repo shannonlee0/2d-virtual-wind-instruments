@@ -22,10 +22,12 @@
         <button type="button" id="playButton" onclick="scene.play = !scene.play">Play (space)</button>
         <button type="button" id="resetButton" onclick="scene.reset();">Blank (enter)</button>
         <button type="button" id="visualizePML" onclick="visualizePML = !visualizePML;">Visualize PML</button>
+        <button type="button" id="mono" onclick="scene.reset(); instrument = new Monopole();">Monopole</button>
+        <button type="button" id="di" onclick="scene.reset(); instrument = new Dipole();">Dipole</button>
         <button type="button" id="clarinet" onclick="scene.reset(); instrument = new Clarinet();">Clarinet</button>
         <button type="button" id="recorder" onclick="scene.reset(); instrument = new Recorder();">Recorder</button>
-        <script>let instrument = new Clarinet(); update();</script>
-        <text>Works best on Chrome! Drag mouse on canvas to draw instrument geometry. To undo, press z. 
+        <script>let instrument = new Monopole(); update();</script>
+        <text>Drag mouse on canvas to draw instrument geometry. To undo, press z. 
             Draw toneholes by holding shift and dragging mouse on instrument geometry. 
             Toggle toneholes by pressing the number keys - number corresponds to the order the relative tonehole was drawn in. 
             Drag and drop yellow source.
