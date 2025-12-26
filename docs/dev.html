@@ -1,0 +1,37 @@
+<!doctype html>
+
+<html>
+    <head>
+        <title>Aerophones: A 2D Virtual Wind Instrument Simulator</title>
+        <style>
+            body {
+            background-color: white;
+            }
+        </style>
+    </head>
+    <body>
+        <canvas id="simulation-surface" width="1200" height="600">
+            Your browser doesn't support HTML5
+        </canvas>
+        <script src="js/(1)utils.js"></script>
+        <script src="js/(2)grid.js"></script>
+        <script src="js/(3)scene.js"></script>
+        <script src="js/(4)instruments.js"></script>
+        <script src="js/(5)renderer.js"></script>
+        <script src="js/(6)input.js"></script>
+        <button type="button" id="playButton" onclick="scene.play = !scene.play">Play (space)</button>
+        <button type="button" id="resetButton" onclick="scene.reset();">Blank (enter)</button>
+        <button type="button" id="mono" onclick="scene.reset(); instrument = new Monopole();">Monopole</button>
+        <button type="button" id="di" onclick="scene.reset(); instrument = new Dipole();">Dipole</button>
+        <button type="button" id="clarinet" onclick="scene.reset(); instrument = new Clarinet();">Clarinet</button>
+        <button type="button" id="recorder" onclick="scene.reset(); instrument = new Recorder();">Recorder</button>
+        <script>let instrument = new Monopole(); update();</script>
+        <text>Drag mouse on canvas to draw instrument geometry. To undo, press z. 
+            Draw toneholes by holding shift and dragging mouse on instrument geometry. 
+            Toggle toneholes by pressing the number keys - number corresponds to the order the relative tonehole was drawn in. 
+            Drag and drop yellow source.
+            Downloads pressure values in form of .txt file after 100000 frames.</text>
+        
+        
+    </body>
+</html>

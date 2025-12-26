@@ -1,11 +1,13 @@
-const canvas = document.getElementById("simulation-surface");
-canvas.tabIndex = 0;
-canvas.focus();
+// everything to do with the singular initialized Grid called "scene" (that is the simulation)
 
-const rect = canvas.getBoundingClientRect();
+const canvas = document.getElementById("simulation-surface");
+canvas.height = 110;
+canvas.width = 220;
+
+canvas.tabIndex = 0;
+
 const gl = getWebGL(canvas);
-    
-let scene = new Grid(gridHeight, gridWidth);
+gl.viewport(0, 0, canvas.width, canvas.height);
 
 // re-render every n = numSteps steps
 const numSteps = 1;
@@ -13,8 +15,8 @@ let numVals = 4000;
 
 // microphone location
 let mic = {
-    i: Math.trunc(10),
-    j: Math.trunc(10),
+    i: Math.trunc(2),
+    j: Math.trunc(2),
     values: []
 }
 
@@ -37,15 +39,15 @@ function simulate() {
     for (let i = 0; i < numSteps; i++) {
         // step values
         // note: put source application after stepping the value to be overwritten?
-        //instrument.applySource();
         scene.stepPressure();
-        // scene.stepVelocity();
+        scene.stepVelocity();
         
         // source
-        //instrument.applySource();
+        instrument.applySource();
         
         // listener
-        mic.values.push(scene.p1[mic.i][mic.j]);
+        mic.values.push(scene.p[mic.i][mic.j]);
+        // mic.values.push(scene.p1[mic.i][mic.j]);
         // scene.p0 = scene.p1;
         // scene.p1 = scene.p2;
 
@@ -57,7 +59,6 @@ function simulate() {
 
 function update() {
     if (scene.play) {
-        console.log(scene);
         simulate();
     }
 
@@ -68,7 +69,24 @@ function update() {
         scene.mapPML();
     }
     draw();
-
-    canvas.focus();
     requestAnimationFrame(update);
+}
+
+function changeInstrument(choice) {
+    scene.reset();
+    
+    switch (choice) {
+        case "clarinet":
+            instrument = new Clarinet();
+            break;
+        case "recorder":
+            instrument = new Recorder();
+            break;
+        case "blank":
+            instrument = new Blank();
+            break;
+        default:
+            instrument = new Clarinet();
+    }
+
 }

@@ -1,0 +1,365 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+:root {
+    --purple: rgb(198, 196, 255);
+}
+
+
+body {
+    height: 100%;
+    background-color: #000000;
+    color: white;
+    font-family: "Lekton", monospace;
+    font-weight: 100;
+    overflow-y: hidden;
+}
+
+button {
+    background: transparent;
+    color: white;
+    border: none;
+    cursor: default;
+    font-family: inherit;
+    font-size: inherit;
+}
+
+#page-wrapper {
+    width: 100%;
+    height: 200vh;
+    display: flex;
+    flex-direction: column;
+    transform: translateY(0);
+    transition: transform 1.2s cubic-bezier(0.85, 0, 0.15, 1);
+    overflow-y: clip;
+}
+
+#page-wrapper.down {
+    transform: translateY(-100vh);
+}
+
+.intro-box, .app-container {
+    height: 100vh;
+    width: 100%;
+}
+
+.intro-box {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    inset: 0;
+    text-align: center;
+}
+
+.directions {
+    opacity: 0;
+    transform: translateY(20px);
+    animation: appear 1.2s ease-out forwards;
+    font-weight: 400;
+    padding: 10px;
+}
+
+h1.directions {
+    font-size: 2rem;
+    animation-delay: 0s; 
+    margin: 100px;
+}
+
+p.directions {
+    font-size: 1rem;
+    line-height: 2;
+    animation-delay: 5.6s; 
+}
+
+button.directions {
+    font-size: 2rem;
+    margin: auto auto;
+    animation: appear 1.2s ease-out forwards, breathe 3s ease-in-out infinite;
+    animation-delay: 7.8s;
+}
+
+.purple-highlight {
+    background: linear-gradient(to right, var(--purple) 50%, white 50%);
+    background-size: 200% 100%;
+    background-position: 100% 0;
+    
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    
+    animation: textFill 1.5s ease-out forwards;
+    animation-delay: var(--delay); 
+}
+
+.app-container {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+}
+
+.top-bar {
+    height: 80px;
+    background: transparent;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    border: none;
+    font-size: 1.2rem;
+    font-weight: 100;
+}
+
+.author {
+    margin: 40px;
+    text-align: left;
+}
+
+.instrument-selector {
+    display: flex;
+    gap: 60px;
+    position: relative;
+    
+}
+
+.about {
+    margin: 40px;
+    text-align: right;
+}
+
+#nav-highlight {
+    position: absolute;
+    height: 100%;
+    width: 0;
+    background: transparent;
+    border: 1px solid rgb(203, 201, 255);
+    border-radius: 6px;
+    transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1); 
+    pointer-events: none;
+    z-index: 0;
+}
+
+.instrument-selector button {
+    font-weight: 100;
+    padding: 5px 10px;
+    background-color: transparent;
+    border: none;
+    z-index: 1;
+    transition: color 0.3s;
+}
+
+.instrument-selector button.active {
+    color: rgb(203, 201, 255);
+    transition: 1s;
+}
+
+.instrument-page {
+    flex-direction: column;
+}
+
+.viewport {
+    display: flex;
+    height: 90vh;
+    justify-content: center;
+    overflow: hidden;
+    background-color: #000;
+}
+
+canvas {
+    display: block;
+    width: 90%;
+    height: 90%;
+    object-fit: contain;
+    image-rendering: pixelated;
+}
+
+.app-container:has(#blank-btn.active) canvas {
+    border: 0.1px solid rgb(255, 255, 255);
+}
+
+canvas:focus {
+    outline: none;
+}
+
+.description {
+    padding: 50px;
+    text-align: center;
+}
+
+
+
+
+#about-page {
+    height: 100%;
+    background-color: #000; 
+    color: #e0e0e0;
+    font-family: 'Lekton', monospace;
+    overflow-y: auto;
+    
+}
+
+.about-content {
+    margin: 100 auto;
+    padding: 40px 100px;
+    padding-bottom: 250px;
+}
+
+#about-page h2 {
+    color: #c6c4ff;
+    font-size: 2.2rem;
+    font-weight: 700;
+    margin-top: 60px;
+    margin-bottom: 20px;
+    border-bottom: 1px solid #333;
+    padding-bottom: 10px;
+}
+
+#about-page h3 {
+    color: #c6c4ff;
+    font-size: 1.5rem;
+    font-weight: 400;
+    margin-top: 30px;
+    margin-bottom: 15px;
+}
+
+.theory-block p {
+    line-height: 1.8;
+    margin-bottom: 20px;
+    font-weight: 400;
+}
+
+.math-block {
+    background: transparent;
+    border-left: 3px solid #c6c4ff;
+    padding: 25px;
+    margin: 25px 0;
+    text-align: center;
+    overflow-x: auto;
+}
+
+.objectives-list {
+    list-style: none;
+    padding: 0;
+    line-height: 1.8;
+}
+
+.objectives-list li {
+    margin-bottom: 25px;
+    padding-left: 20px;
+    border-left: 1px solid #c6c4ff;
+}
+
+.objectives-list strong {
+    color: #c6c4ff;
+    display: block;
+    margin-bottom: 5px;
+}
+
+.specs-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 25px 0;
+    font-size: 0.9rem;
+}
+
+.specs-table th {
+    text-align: left;
+    color: #c6c4ff;
+    border-bottom: 1px solid #333;
+    padding: 10px;
+}
+
+.specs-table td {
+    padding: 12px 10px;
+    border-bottom: 1px solid #1a1a1a;
+}
+
+code {
+    background: #1a1a1a;
+    color: #c6c4ff;
+    padding: 2px 6px;
+    border-radius: 4px;
+}
+
+.video-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 30px;
+    margin: 40px 0;
+}
+
+.video-item video {
+    width: 100%;
+    border: 1px solid #333;
+    filter: grayscale(0.5) contrast(1.2);
+    transition: filter 0.3s ease;
+}
+
+.video-item video:hover {
+    filter: grayscale(0);
+}
+
+.caption {
+    font-size: 0.8rem;
+    color: #888;
+    margin-top: 10px;
+    text-align: center;
+}
+
+.audio-grid {
+    display: grid;
+    gap: 40px;
+    margin-top: 30px;
+}
+
+.audio-item {
+    background: #0a0a0a;
+    padding: 20px;
+    border: 1px solid #222;
+}
+
+.audio-item h4 {
+    padding: 10px;
+    color: #c6c4ff;
+}
+.audio-item p {
+    margin-left: 10px;
+}
+
+audio {
+    width: 100%;
+    margin: 15px 0;
+}
+
+
+
+
+
+
+
+
+@keyframes appear {
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes breathe {
+    0% {
+        transform: translateY(0);
+    }
+    50% {
+        transform: translateY(5px);
+    }
+    100% {
+        transform: translateY(0);
+    }
+}
+
+@keyframes textFill {
+    to {
+        background-position: 0% 0;
+    }
+}

@@ -10,31 +10,10 @@ let mouseI = 0;
 let mouseJ = 0;
 let length = 0;
 
-
-// const ampSlider = document.getElementById("ampSlider");
-// ampSlider.addEventListener("input", () => {
-//     amp = ampSlider.value;
-// })
-
-// const freqSlider = document.getElementById("freqSlider");
-// freqSlider.addEventListener("input", () => {
-//     freq = freqSlider.value;
-// })
-
-// const pmSlider = document.getElementById("pmSlider");
-// pmSlider.addEventListener("input", () => {
-//     pm = pmSlider.value;
-//     console.log("pm:", pm);
-// })
-
-// const numValsSlider = document.getElementById("numValsSlider");
-// numValsSlider.addEventListener("input", () => {
-//     numVals = parseInt(numValsSlider.value);
-// })
-
 canvas.addEventListener("keydown", function (event) {
+    event.preventDefault();
     // restart
-    if (event.code === "Enter") {
+    if (event.code === "KeyR") {
         scene.reset();
     }
 
@@ -49,10 +28,6 @@ canvas.addEventListener("keydown", function (event) {
         scene.play = !scene.play;
     }
 
-    // cross-hatch
-    if (event.code == "KeyF") {
-        //hatch = !hatch;
-    }
 
     // toggle toneholes
     if (event.code.startsWith("Digit")) {
@@ -65,6 +40,8 @@ canvas.addEventListener("keydown", function (event) {
 
 // create instrument geometry
 canvas.addEventListener("mousedown", function (event) {
+    mouseI = findCell(scene)[0];
+    mouseJ = findCell(scene)[1];
     if (event.shiftKey && scene.geometry[mouseI][mouseJ]) {
         draggingToneholes = true;
         drawToneholes(mouseI, mouseJ);

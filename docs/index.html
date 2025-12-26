@@ -1,38 +1,309 @@
-<!doctype html>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Acoustic Wave Lab | Portfolio</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Lekton:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+    <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div id="page-wrapper">
+        <div class="intro-box">
+            <h1 class="directions">This 2D acoustic solver translates 
+                <span class="purple-highlight" style="--delay: 1.2s">user-defined geometries</span> into <span class="purple-highlight" style="--delay: 3.4s">dynamic pressure fields.</span></h1>
+            <p class="directions">{ CLICK } to draw instrument geometry.<br>
+                { Z } to undo.<br>
+                { SHIFT + CLICK } to draw toneholes. Toggle with { DIGIT } keys.<br>
+                { SPACE } to simulate.
+            </p>
+            <button id="next-btn" class="directions">↓</button>
+        </div>
 
-<html>
-    <head>
-        <title>Aerophones: A 2D Virtual Wind Instrument Simulator</title>
-        <style>
-            body {
-            background-color: white;
-            }
-        </style>
-    </head>
-    <body>
-        <canvas id="simulation-surface" width="1200" height="600">
-            Your browser doesn't support HTML5
-        </canvas>
-        <script src="js/(1)utils.js"></script>
-        <script src="js/(2)grid.js"></script>
-        <script src="js/(3)scene.js"></script>
-        <script src="js/(4)instruments.js"></script>
-        <script src="js/(5)renderer.js"></script>
-        <script src="js/(6)input.js"></script>
-        <button type="button" id="playButton" onclick="scene.play = !scene.play">Play (space)</button>
-        <button type="button" id="resetButton" onclick="scene.reset();">Blank (enter)</button>
-        <button type="button" id="visualizePML" onclick="visualizePML = !visualizePML;">Visualize PML</button>
-        <button type="button" id="mono" onclick="scene.reset(); instrument = new Monopole();">Monopole</button>
-        <button type="button" id="di" onclick="scene.reset(); instrument = new Dipole();">Dipole</button>
-        <button type="button" id="clarinet" onclick="scene.reset(); instrument = new Clarinet();">Clarinet</button>
-        <button type="button" id="recorder" onclick="scene.reset(); instrument = new Recorder();">Recorder</button>
-        <script>let instrument = new Monopole(); update();</script>
-        <text>Drag mouse on canvas to draw instrument geometry. To undo, press z. 
-            Draw toneholes by holding shift and dragging mouse on instrument geometry. 
-            Toggle toneholes by pressing the number keys - number corresponds to the order the relative tonehole was drawn in. 
-            Drag and drop yellow source.
-            Downloads pressure values in form of .txt file after 100000 frames.</text>
-        
-        
-    </body>
+
+
+
+        <div class="app-container">
+
+
+            <nav class="top-bar">
+                <div class="author">
+                    Shannon Erica Lee
+                </div>
+                <div class="instrument-selector">
+                    <div id="nav-highlight"></div>
+
+                    <button id="clarinet-btn">clarinet</button>
+                    <button id="recorder-btn">recorder</button>
+                    <button id="blank-btn">playground</button>
+                    
+                </div>
+                <div class="about">
+                    <button id="about-btn">about</button>
+                </div>
+            </nav>
+
+
+
+
+            <div class="instrument-page">
+                <main class="viewport">
+                    <canvas id="simulation-surface"></canvas>
+                </main>
+                <div class="description">
+                    Instrument Description
+                </div>
+            </div>
+
+            <div id="about-page" style="display: none">
+                <div class="about-content">
+                    <section class="theory-block">
+                        <h2>Motivation</h2>
+                        <p>
+                            Musical instrument design has traditionally relied on physical prototyping or simplified 1D mathematical models. 
+                            While industry-standard 1D digital waveguide synthesis is computationally efficient, it often fails to capture 
+                            complex spatial behaviors such as asymmetric bore shapes and localized wave interference at toneholes.
+                        </p>
+                        <p>
+                            By translating user-defined, two-dimensional geometries into dynamic pressure fields, this tool serves as a 
+                            <strong>virtual laboratory</strong> for experimental musicians to design and test novel instruments. 
+                        </p>
+                        <p>
+                            Key objectives include:
+                        </p>
+                        <ul class="objectives-list">
+                            <li>
+                                <strong>Physically-Informed Synthesis:</strong> 
+                                Implementing dynamic, non-linear source models to generate realistic audio directly from simulation data.
+                            </li>
+                            <li>
+                                <strong>Design Playground:</strong> 
+                                Providing a canvas where users can create custom acoustic environments to   
+                                enable exploration.
+                            </li>
+                        </ul>
+                    </section>
+
+                    <section id="background">
+                        <h2>Background</h2>
+                        <div class="theory-block">
+                            <h3>Acoustic Wave Equation</h3>
+                            <p>Sound propagation is modeled according to the following first-order acoustic equations, describing the relationship between pressure 
+                                \( p \) and particle velocity \( \mathbf{v} \):</p>
+                            <div class="math-block">
+                                \[ \frac{\partial p}{\partial t} = -\rho c^2 \nabla \cdot \mathbf{v} \]
+                                \[ \frac{\partial \mathbf{v}}{\partial t} = -\frac{1}{\rho} \nabla p \]
+                            </div>
+                            <p>where \( \rho \) is air density and \( c \) is the speed of sound.</p>
+                        </div>
+                        <div class="theory-block">
+                            <h3>The FDTD Method & Staggered Grid</h3>
+                            <p>
+                                We utilize the <strong>Finite-Difference Time-Domain (FDTD)</strong> method to discretize space and time. 
+                                A <strong>staggered grid</strong> is implemented to improve numerical accuracy, where pressure 
+                                is defined at cell centers and velocity components are offset to cell edges.
+                            </p>
+                            
+                        </div>
+                    </section>
+
+                    <section id="solver">
+                        <h2>The Solver</h2>
+                        <div class="theory-block">
+                            <h3>Discrete Update Equations</h3>
+                            <p>The solver transforms continuous derivatives into discrete algebraic updates according to the following integration scheme:</p>
+                            <div class="math-block">
+                                \[ p_{i,j}^{n+1} = p_{i,j}^{n} - \frac{\rho c^2 dt}{dx} \left( (v_{x, i+1,j}^{n} - v_{x, i,j}^{n}) + (v_{y, i,j+1}^{n} - v_{y, i,j}^{n}) \right) \]
+                            </div>
+                            <table class="specs-table">
+                                <thead>
+                                    <tr><th>Parameter</th><th>Variable</th><th>Value</th></tr>
+                                </thead>
+                                <tbody>
+                                    <tr><td>Grid Spacing</td><td><code>dx</code></td><td>0.00383 m</td></tr>
+                                    <tr><td>Time Step</td><td><code>dt</code></td><td>6.446e-6 s</td></tr>
+                                    <tr><td>Speed of Sound</td><td><code>C</code></td><td>347.23 m/s</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </section>
+
+                    <section id="pml">
+                        <h2>Boundary Conditions</h2>
+                        <div class="theory-block">
+                            <h3>Perfectly Matched Layer (PML)</h3>
+                            <p>
+                                To simulate infinite open air, an 8-cell deep buffer zone surrounds the grid. 
+                                We use a linearly increasing damping coefficient \( \sigma \) to absorb outgoing waves without reflection.
+                            </p>
+                            <div class="math-block">
+                                \[ \sigma(x) = \sigma_{max} (x/L)^2 \]
+                            </div>
+                            
+                        </div>
+                    </section>
+
+                    <section id="architecture">
+                        <h2>Interactive Architecture</h2>
+                        <div class="theory-block">
+                            <h3>WebGL & Input</h3>
+                            <p>
+                                Visualization is offloaded to the GPU via <strong>WebGL</strong>, mapping pressure values to colors 
+                                in a custom fragment shader. Input handling maps screen-space coordinates to 
+                                grid indices to allow real-time geometry customization.
+                            </p>
+                        </div>
+                    </section>
+
+                    <section id="validation">
+                        <h2>Verification & Validation</h2>
+                        <div class="video-grid">
+                            <div class="video-item">
+                                <video class="demo-about" muted loop playsinline src="../assets/mono.mp4"></video>
+                                <p class="caption">Monopole (Point Source)</p>
+                            </div>
+                            <div class="video-item">
+                                <video class="demo-about" muted loop playsinline src="../assets/dipagain.mp4"></video>
+                                <p class="caption">Dipole (Interference)</p>
+                            </div>
+                            <div class="video-item">
+                                <video class="demo-about" muted loop playsinline src="../assets/gaussiannopml.mp4"></video>
+                                <p class="caption">No PML (Reflection)</p>
+                            </div>
+                            <div class="video-item">
+                                <video class="demo-about" muted loop playsinline src="../assets/gaussianpml.mp4"></video>
+                                <p class="caption">With PML (Absorption)</p>
+                            </div>
+                        </div>
+                    </section>
+
+                    <section id="Audio Extraction">
+                        <h2>Results</h2>
+                        
+                        <div class="theory-block">
+                            <p>
+                                The final output of the simulation is the synthesis of realistic audio from calculated pressure fields. 
+                                By sampling pressure values at a specified virtual "microphone" location, we 
+                                capture the time-varying signal to reconstruct the sound of the virtual instrument.
+                            </p>
+                        </div>
+
+                        <div class="theory-block">
+                            <h3>1. Sampling and Post-Processing</h3>
+                            <p>
+                                Raw pressure data is captured as a high-frequency stream of floating-point values:
+                            </p>
+                            <ul class="objectives-list">
+                                <li>
+                                    <strong>Data Extraction:</strong> Pressure values are pushed into
+                                    an array during the <code>simulate()</code> loop.
+                                </li>
+                                <li>
+                                    <strong>Format Conversion:</strong> Data is exported as a <code>.txt</code> file containing 
+                                    amplitude over time.
+                                </li>
+                                <li>
+                                    <strong>Audio Rendering:</strong> Values are fed into a simple Python script and encoded into 16-bit WAV files 
+                                    for direct comparison with physical acoustic phenomena.
+                                </li>
+                            </ul>
+                        </div>
+                    </section>
+
+                    <section id="audio-samples">
+                        <h2>Audio Samples</h2>
+                        <div class="theory-block">
+                            <p>
+                                These samples demonstrate how different geometric configurations and source models generate distinct timbres.
+                            </p>
+
+                            <div class="audio-grid">
+                                <div class="audio-item">
+                                    <h4>Clarinet</h4>
+                                    <p>
+                                        Modeled as a pressure-controlled valve using a Bernoulli-based flow equation.
+                                    </p>
+                                    <audio controls src="../assets/claraud.wav"></audio>
+                                    <p class="caption">Single-reed source model</p>
+                                </div>
+
+                                <div class="audio-item">
+                                    <h4>Recorder</h4>
+                                    <p>
+                                        Modeled as an unstable air jet using a delayed-feedback mechanism based on 
+                                        the distance from the flue to the labium edge.
+                                    </p>
+                                    <audio controls src="../assets/newnewflute.wav"></audio>
+                                    <p class="caption">Labium source model</p>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+
+                    <section id="future-work">
+                        <h2>Future Work</h2>
+
+                        <ul class="objectives-list">
+                            <li>
+                                <strong>Artifact Reduction:</strong> 
+                                Mitigating high-frequency artificial resonances in the audio output. 
+                                This involves implementing frequency-dependent damping.
+                            </li>
+                            <li>
+                                <strong>Refinement of Source Models:</strong> 
+                                Moving beyond simplified Bernoulli and jet models toward higher-order excitation physics. 
+                                By accounting for the physical mass and damping of the reed or the turbulence of the air jet, 
+                                the simulation can achieve more organic and realistic timbres.
+                            </li>
+                            <li>
+                                <strong>Real-Time Audio Synthesis:</strong> 
+                                Transitioning from the current .txt-to-WAV export pipeline to live, real-time playback 
+                                via CUDA. This will provide immediate acoustic feedback as the user draws, 
+                                tightening the feedback loop.
+                            </li>
+                        </ul>
+                    </section>
+
+                    <section id="acknowledgments & references">
+                        <h2>Acknowledgments</h2>
+                        <div class="theory-block">
+                            <p>
+                                <strong>Big thanks to Kangrui Xue and Professor Doug James for your continued mentorship.</strong>
+                            </p>
+                        </div>
+                        <h3>References</h3>
+                        <p>
+                            Allen, A., Raghuvanshi, N. 2015. Aerophones in Flatland: Interactive Wave Simulation of Wind Instruments.
+                            ACM Trans. Graph. 34, 4, Article 134 (August 2015), 11 pages. DOI = 10.1145/2767001
+                            http://doi.acm.org/10.1145/2767001.
+                        </p>
+                        <br>
+                        <p>
+                            Kangrui Xue, Jui-Hsien Wang, Timothy R. Langlois, Doug L. James. WaveBlender: Practical Sound-Source Animation in Blended Domains. 
+                            SIGGRAPH Asia 2024 Conference Papers.
+                        </p>
+                    </section>
+                    <div id="footer">
+                        <p><br><br></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+
+
+    <script src="js/(1)utils.js"></script>
+    <script src="js/(2)grid.js"></script>
+    <script src="js/(3)scene.js"></script>
+    <script src="js/(4)instruments.js"></script>
+    <script src="js/(5)renderer.js"></script>
+    <script src="js/(6)input.js"></script>
+    <script src="js/(7)demo.js"></script>
+    
+
+    
+</body>
 </html>

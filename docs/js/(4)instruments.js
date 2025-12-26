@@ -1,6 +1,8 @@
+// instruments classes defined here
+
 let amp = 20;
-let freq = 800;
-let pm = 3000;
+let freq = 1100;
+let pm = 1800;
 
 class Clarinet {
     constructor(boreLength = 90) {
@@ -10,13 +12,6 @@ class Clarinet {
             j: Math.trunc(gridWidth / 2) - (this.boreLength + 6) / 2,
             height: 3
         }
-
-        // velocity grids for reed, based on source
-        // traversed up to down
-        this.v0 = Array(this.source.height).fill(0);
-        this.v1 = Array(this.source.height).fill(0);
-        console.log("v0", this.v0, this.v1);
-        
 
         for (let j = 0; j < this.boreLength; j++) {
             scene.drawInstrument(this.source.i - 1, this.source.j + j);
@@ -66,10 +61,6 @@ class Clarinet {
             }
         }
 
-        
-        
-        console.log("pm", pm);
-
         this.pmax = 10;
     }
 
@@ -78,8 +69,8 @@ class Clarinet {
         // jet width wj
         // reed gap E [0, hr] (where hr is resting aperture)
         // reed elasticity kr
-        console.log("scene", scene);
-        let pb = scene.p1[this.source.i + Math.trunc(this.source.height / 2)][this.source.j + 2];
+
+        let pb = scene.p[this.source.i + Math.trunc(this.source.height / 2)][this.source.j + 2];
 
         const wj = 1.2 * 10**(-2);
         const hr = 6 * 10**(-4);
@@ -103,23 +94,16 @@ class Clarinet {
 
         // vb = ub / H / dx / (number of drawn excitation cells)
         let vb = ub / (0.025 * dx * this.source.height);
-
-        // apply Neumann boundary conditions
+        
         for (let n = 0; n < this.source.height; n++) {
-            let dv = (vb - this.v1[n]);
-            let pinj = pb + (RHO * dv/dt) * dx;
-            scene.p1[this.source.i + n][this.source.j] = pinj;
-            this.v0[n] = vb;
-
+            if (scene.frame > 4) {
+                scene.p[this.source.i + n][this.source.j] = 0;
+                scene.geometry[this.source.i + n][this.source.j] = true;
+                continue;
+            }
+            scene.vx[this.source.i + n][this.source.j] = vb;
             scene.geometry[this.source.i + n][this.source.j] = true;
-            scene.geometry[this.source.i + n][this.source.j-1] = true;
         }
-
-        // "swap pointers"
-        let vtemp = this.v0;
-        this.v0 = this.v1;
-        this.v1 = vtemp;
-        console.log("v", this.v0, this.v1);
     }
 }
 
@@ -232,11 +216,11 @@ class Monopole {
             j: Math.trunc(gridWidth / 2),
         }
         this.toneholes = [];
-        this.pmax = 20;
+        this.pmax = 0.5;
     }
 
     applySource() {
-        scene.p1[this.source.i][this.source.j] = amp * Math.sin(scene.frame * dt * (2*Math.PI) * freq);
+        scene.p[this.source.i][this.source.j] = amp * Math.sin(scene.frame * dt * (2*Math.PI) * freq);
     }
 }
 
@@ -251,8 +235,8 @@ class Dipole {
     }
 
     applySource() {
-        scene.p1[this.source.i][this.source.j] = -amp * Math.sin(scene.frame * dt * (2*Math.PI) * freq);
-        scene.p1[this.source.i][this.source.j + 30] = amp * Math.sin(scene.frame * dt * (2*Math.PI) * freq);
+        scene.p[this.source.i][this.source.j] = -amp * Math.sin(scene.frame * dt * (2*Math.PI) * freq);
+        scene.p[this.source.i][this.source.j + 30] = amp * Math.sin(scene.frame * dt * (2*Math.PI) * freq);
     }
 }
 
@@ -264,11 +248,44 @@ class Blank {
             height: 2
         }
         this.toneholes = [];
-        this.pmax = 1;
+        this.pmax = 20;
     }
 
     applySource() {
+        // mouth pressure pm, bore pressure bp
+        // jet width wj
+        // reed gap E [0, hr] (where hr is resting aperture)
+        // reed elasticity kr
+
+        let pb = scene.p[this.source.i + Math.trunc(this.source.height / 2)][this.source.j + 2];
+
+        const wj = 1.2 * 10**(-2);
+        const hr = 6 * 10**(-4);
+        const kr = 8 * 10**(6);
+
+        // the smaller deltaP, the greater the reed gap
+        let deltaP = pm - pb;
+        if (deltaP < 0) { deltaP = 0; }
+
+        // pressure difference at which reed gap = 0
+        const deltaPMax = kr * hr;
+
+        // reed aperture factor E [0, 1]: factor = 0 -> reed fully closed
+        let gapFactor = (1 - (deltaP / deltaPMax));
+
+        // particle velocity due to steady-state Bernoulli equation (incompressible flow assumed)
+        let vp = (2 * deltaP / RHO) ** (1/2);
+
+        // calculate volume flow into bore ub to find velocity of bore cells vb
+        let ub = wj * hr * gapFactor * vp;
+
+        // vb = ub / H / dx / (number of drawn excitation cells)
+        let vb = ub / (0.025 * dx * this.source.height);
         
+        for (let n = 0; n < this.source.height; n++) {
+            scene.vx[this.source.i + n][this.source.j] = vb;
+            scene.geometry[this.source.i + n][this.source.j] = true;
+        }
     }
 }
 
