@@ -116,6 +116,11 @@ button.directions {
     text-align: left;
 }
 
+.author a {
+    color: white;
+    text-decoration: none;
+}
+
 .instrument-selector {
     display: flex;
     gap: 60px;
