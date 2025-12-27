@@ -2,7 +2,7 @@
 
 Simulating acoustic wave propagation can aid in the exploration of novel musical instrument designs. We present a 2D wave simulation that visualizes real-time pressure propagation and synthesizes audio, based on user-defined instrument geometries and dynamic source models.
 
-**Live Demo:** [https://shannonlee0.github.io/2D-Virtual-Wind-Instruments/](https://shannonlee0.github.io/2D-Virtual-Wind-Instruments/)
+**Live Demo:** [https://shannonlee0.github.io/modeling-virtual-wind-instruments/](https://shannonlee0.github.io/modeling-virtual-wind-instruments/)
 
 ---
 
